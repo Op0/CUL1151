@@ -237,6 +237,12 @@
     outline-offset: 1px;
   }
   .recipe { margin-bottom: 10px; }
+  .row .custom-name {
+    grid-column: 1 / 2;
+    height: 36px;
+    font-size: 14px;
+    margin-top: -1px;
+  }
   .setup {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -455,6 +461,10 @@
     <label for="recipe">Recipe</label>
     <select id="recipe"></select>
   </div>
+  <div class="field recipe" id="recipe-name-wrap">
+    <label for="recipe-name">Recipe name</label>
+    <input type="text" id="recipe-name" autocomplete="off" placeholder="Used for the saved file" enterkeyhint="next">
+  </div>
   <div class="setup">
     <div class="field">
       <label for="target">Target dough weight</label>
@@ -549,18 +559,8 @@
 
 <script>
 (function () {
-  var FLOURS = ['Bread flour', 'AP flour', 'Whole wheat flour', 'Cake flour', 'Pastry flour', 'Rye flour', 'Other flour'];
-  var OTHERS = [
-    'Water', 'Milk', 'Buttermilk', 'Heavy cream', 'Sour cream',
-    'Butter', 'Oil', 'Shortening', 'Cream cheese',
-    'Eggs', 'Egg yolks', 'Egg whites',
-    'Granulated sugar', 'Brown sugar', 'Powdered sugar', 'Honey',
-    'Salt', 'Instant yeast', 'Baking powder', 'Baking soda',
-    'Vanilla', 'Cinnamon', 'Nutmeg', 'Citrus juice', 'Citrus zest', 'Cocoa powder',
-    'Chocolate', 'Nuts', 'Fruit', 'Coconut', 'Crumbs',
-    'Cornstarch', 'Gelatin', 'Malt', 'Preferment',
-    'Misc'
-  ];
+  var FLOURS = ['AP flour', 'Bread flour', 'Cake flour', 'Pastry flour', 'Rye flour', 'Whole wheat flour', 'Other flour'];
+  var OTHERS = ['Baking powder', 'Baking soda', 'Brown sugar', 'Butter', 'Buttermilk', 'Chocolate', 'Cinnamon', 'Citrus juice', 'Citrus zest', 'Cocoa powder', 'Coconut', 'Cornstarch', 'Cream cheese', 'Crumbs', 'Egg whites', 'Egg yolks', 'Eggs', 'Fruit', 'Gelatin', 'Granulated sugar', 'Heavy cream', 'Honey', 'Instant yeast', 'Malt', 'Milk', 'Nutmeg', 'Nuts', 'Oil', 'Powdered sugar', 'Preferment', 'Salt', 'Shortening', 'Sour cream', 'Vanilla', 'Water', 'Custom'];
   var KEY = 'bakers-math-v2';
   var OZ_PER_G = 0.03527396195;
   var UNITS = {
@@ -568,10 +568,10 @@
     oz: { label: 'oz', decimals: 2, tolerance: 0.05, tolText: '0.05 oz' }
   };
 
-  var TEMPLATES = [{"week":"Week 1","recipes":[{"name":"Chocolate Chip Cookies","rows":[["Bread flour",100.0],["Butter",57.7],["Brown sugar",61.5],["Granulated sugar",38.5],["Vanilla",1.9],["Eggs",19.2],["Baking soda",1.4],["Baking powder",1.4],["Salt",1.4],["Chocolate",100.0]]},{"name":"Country Biscuits","rows":[["AP flour",100.0],["Salt",2.1],["Granulated sugar",5.0],["Baking powder",5.0],["Butter",35.0],["Milk",60.0]]},{"name":"Fruit Muffin","rows":[["Bread flour",100.0],["Granulated sugar",54.1],["Brown sugar",33.3],["Oil",33.3],["Eggs",29.2],["Baking powder",3.9],["Salt",1.8],["Sour cream",74.9],["Fruit",93.6]]}]},{"week":"Week 2","recipes":[{"name":"Inside Out Chocolate Chip Cookies","rows":[["AP flour",100.0],["Butter",45.2],["Granulated sugar",80.0],["Brown sugar",80.0],["Eggs",40.0],["Vanilla",4.0],["Cocoa powder",44.0],["Baking soda",3.7],["Salt",0.6],["Milk",12.0],["Chocolate",180.0]]},{"name":"Sabayon Brownie Base","rows":[["Pastry flour",100.0],["Butter",135.9],["Granulated sugar",271.3],["Vanilla",7.7],["Eggs",161.7],["Cocoa powder",35.9],["Salt",1.0],["Baking powder",1.0]]},{"name":"Lemon Cream Scone","rows":[["AP flour",100.0],["Granulated sugar",11.8],["Baking powder",3.9],["Salt",0.2],["Citrus zest",1.1],["Butter",23.6],["Eggs",41.5],["Heavy cream",47.0],["Misc",2.0]]},{"name":"Pate a Choux","rows":[["Bread flour",100.0],["Water",177.8],["Butter",88.9],["Granulated sugar",8.3],["Salt",1.8],["Eggs",155.6]]}]},{"week":"Week 3","recipes":[{"name":"Banana Pecan Bread","rows":[["AP flour",100.0],["Butter",76.2],["Brown sugar",114.3],["Eggs",67.2],["Fruit",120.9],["Citrus juice",4.8],["Salt",0.5],["Baking powder",2.0],["Cinnamon",0.9],["Nutmeg",0.4],["Nuts",57.1]]},{"name":"3-2-1 Pie Dough","rows":[["AP flour",100.0],["Butter",68.1],["Salt",2.0],["Water",33.0]]},{"name":"Vodka Pie Dough","rows":[["AP flour",100.0],["Salt",0.8],["Granulated sugar",7.1],["Butter",48.0],["Shortening",32.0],["Misc",8.0],["Water",8.0]]}]},{"week":"Week 5","recipes":[{"name":"Baguette with Poolish","rows":[["Bread flour",100.0],["Water",50.8],["Instant yeast",0.6],["Salt",3.0],["Malt",0.8],["Preferment",98.0]]},{"name":"Focaccia with Poolish","rows":[["Bread flour",96.6],["Rye flour",3.4],["Preferment",48.3],["Water",53.1],["Oil",8.2],["Instant yeast",0.7],["Salt",3.7]]}]},{"week":"Week 6","recipes":[{"name":"Brioche","rows":[["AP flour",100.0],["Misc",8.5],["Granulated sugar",10.6],["Instant yeast",2.7],["Eggs",44.0],["Water",17.3],["Salt",2.4],["Butter",43.1]]},{"name":"Challah","rows":[["Bread flour",100.0],["Milk",36.0],["Butter",16.0],["Granulated sugar",9.0],["Honey",4.0],["Eggs",21.0],["Salt",2.0],["Preferment",25.3]]},{"name":"Cinnamon Roll Wreath","rows":[["AP flour",100.0],["Milk",53.3],["Granulated sugar",13.3],["Instant yeast",1.1],["Eggs",13.3],["Butter",22.7],["Salt",1.1]]}]},{"week":"Week 7","recipes":[{"name":"Puff Pastry","rows":[["Bread flour",100.0],["Water",50.0],["Butter",10.4],["Salt",2.2],["Malt",1.1],["Citrus juice",1.1],["Butter",83.3]]}]},{"week":"Weeks 8-9","recipes":[{"name":"Croissant with Poolish","rows":[["Bread flour",100.0],["Milk",33.9],["Granulated sugar",18.3],["Salt",3.1],["Instant yeast",1.4],["Malt",0.8],["Butter",5.5],["Preferment",87.5],["Butter",62.5]]},{"name":"Danish with Biga","rows":[["Bread flour",100.0],["Milk",45.2],["Eggs",15.9],["Granulated sugar",17.5],["Salt",3.2],["Instant yeast",1.8],["Butter",4.0],["Preferment",66.7],["Butter",68.3]]}]},{"week":"Week 11","recipes":[{"name":"Shortdough","rows":[["Cake flour",100.0],["Butter",66.7],["Powdered sugar",33.3],["Eggs",11.0]]}]},{"week":"Weeks 12-13","recipes":[{"name":"Carrot Cake","rows":[["Bread flour",100.0],["Granulated sugar",80.0],["Brown sugar",80.0],["Oil",120.0],["Eggs",80.0],["Baking soda",1.8],["Baking powder",3.5],["Cinnamon",1.8],["Nutmeg",0.4],["Salt",1.8],["Fruit",160.0]]},{"name":"Chocolate Chiffon","rows":[["Cake flour",100.0],["Water",100.0],["Cocoa powder",26.3],["Oil",68.4],["Egg yolks",100.0],["Vanilla",3.5],["Granulated sugar",199.1],["Baking soda",7.9],["Egg whites",149.1],["Granulated sugar",39.5]]},{"name":"Momofuku Birthday Cake","rows":[["Cake flour",100.0],["Butter",88.9],["Granulated sugar",111.1],["Salt",1.1],["Honey",18.6],["Vanilla",5.7],["Eggs",55.7],["Baking powder",2.7],["Misc",33.9],["Buttermilk",66.7]]},{"name":"Cream Cheese Pound Cake","rows":[["Cake flour",100.0],["Butter",50.0],["Cream cheese",16.7],["Granulated sugar",175.0],["Salt",0.4],["Citrus zest",1.8],["Eggs",100.0],["Vanilla",2.5],["Misc",1.2],["Heavy cream",66.7]]}]},{"week":"Final","recipes":[{"name":"Cinnamon Crunch Banana Bread","rows":[["AP flour",100.0],["Granulated sugar",105.3],["Cinnamon",1.4],["Nutmeg",0.2],["Baking soda",3.2],["Salt",0.8],["Oil",52.6],["Eggs",52.6],["Honey",44.7],["Fruit",184.2],["Citrus juice",7.9],["Water",30.0]]},{"name":"Biscuit","rows":[["AP flour",100.0],["Baking powder",4.7],["Baking soda",0.3],["Salt",0.7],["Butter",12.5],["Shortening",12.5],["Buttermilk",72.0]]},{"name":"Blueberry Buckle Coffeecake","rows":[["AP flour",100.0],["Butter",23.5],["Granulated sugar",61.8],["Eggs",23.0],["Vanilla",1.9],["Baking powder",2.8],["Salt",1.2],["Milk",47.0],["Fruit",117.1]]},{"name":"Choco Pan de Coco","rows":[["AP flour",50.0],["Bread flour",50.0],["Misc",44.4],["Water",28.4],["Preferment",44.4],["Instant yeast",1.3],["Coconut",27.8],["Cocoa powder",5.6],["Butter",6.7],["Brown sugar",6.7],["Salt",2.2],["Chocolate",11.1]]}]}];
+  var TEMPLATES = [{"week":"Week 1","recipes":[{"name":"Chocolate Chip Cookies","rows":[["Bread flour",100.0],["Butter",57.7],["Brown sugar",61.5],["Granulated sugar",38.5],["Vanilla",1.9],["Eggs",19.2],["Baking soda",1.4],["Baking powder",1.4],["Salt",1.4],["Chocolate",100.0]]},{"name":"Country Biscuits","rows":[["AP flour",100.0],["Salt",2.1],["Granulated sugar",5.0],["Baking powder",5.0],["Butter",35.0],["Milk",60.0]]},{"name":"Fruit Muffin","rows":[["Bread flour",100.0],["Granulated sugar",54.1],["Brown sugar",33.3],["Oil",33.3],["Eggs",29.2],["Baking powder",3.9],["Salt",1.8],["Sour cream",74.9],["Fruit",93.6]]}]},{"week":"Week 2","recipes":[{"name":"Inside Out Chocolate Chip Cookies","rows":[["AP flour",100.0],["Butter",45.2],["Granulated sugar",80.0],["Brown sugar",80.0],["Eggs",40.0],["Vanilla",4.0],["Cocoa powder",44.0],["Baking soda",3.7],["Salt",0.6],["Milk",12.0],["Chocolate",180.0]]},{"name":"Sabayon Brownie Base","rows":[["Pastry flour",100.0],["Butter",135.9],["Granulated sugar",271.3],["Vanilla",7.7],["Eggs",161.7],["Cocoa powder",35.9],["Salt",1.0],["Baking powder",1.0]]},{"name":"Lemon Cream Scone","rows":[["AP flour",100.0],["Granulated sugar",11.8],["Baking powder",3.9],["Salt",0.2],["Citrus zest",1.1],["Butter",23.6],["Eggs",41.5],["Heavy cream",47.0],["Custom",2.0,"Lemon extract"]]},{"name":"Pate a Choux","rows":[["Bread flour",100.0],["Water",177.8],["Butter",88.9],["Granulated sugar",8.3],["Salt",1.8],["Eggs",155.6]]}]},{"week":"Week 3","recipes":[{"name":"Banana Pecan Bread","rows":[["AP flour",100.0],["Butter",76.2],["Brown sugar",114.3],["Eggs",67.2],["Fruit",120.9],["Citrus juice",4.8],["Salt",0.5],["Baking powder",2.0],["Cinnamon",0.9],["Nutmeg",0.4],["Nuts",57.1]]},{"name":"3-2-1 Pie Dough","rows":[["AP flour",100.0],["Butter",68.1],["Salt",2.0],["Water",33.0]]},{"name":"Vodka Pie Dough","rows":[["AP flour",100.0],["Salt",0.8],["Granulated sugar",7.1],["Butter",48.0],["Shortening",32.0],["Custom",8.0,"Vodka"],["Water",8.0]]}]},{"week":"Week 5","recipes":[{"name":"Baguette with Poolish","rows":[["Bread flour",100.0],["Water",50.8],["Instant yeast",0.6],["Salt",3.0],["Malt",0.8],["Preferment",98.0]]},{"name":"Focaccia with Poolish","rows":[["Bread flour",96.6],["Rye flour",3.4],["Preferment",48.3],["Water",53.1],["Oil",8.2],["Instant yeast",0.7],["Salt",3.7]]}]},{"week":"Week 6","recipes":[{"name":"Brioche","rows":[["AP flour",100.0],["Custom",8.5,"Milk powder"],["Granulated sugar",10.6],["Instant yeast",2.7],["Eggs",44.0],["Water",17.3],["Salt",2.4],["Butter",43.1]]},{"name":"Challah","rows":[["Bread flour",100.0],["Milk",36.0],["Butter",16.0],["Granulated sugar",9.0],["Honey",4.0],["Eggs",21.0],["Salt",2.0],["Preferment",25.3]]},{"name":"Cinnamon Roll Wreath","rows":[["AP flour",100.0],["Milk",53.3],["Granulated sugar",13.3],["Instant yeast",1.1],["Eggs",13.3],["Butter",22.7],["Salt",1.1]]}]},{"week":"Week 7","recipes":[{"name":"Puff Pastry","rows":[["Bread flour",100.0],["Water",50.0],["Butter",10.4],["Salt",2.2],["Malt",1.1],["Citrus juice",1.1],["Butter",83.3]]}]},{"week":"Weeks 8-9","recipes":[{"name":"Croissant with Poolish","rows":[["Bread flour",100.0],["Milk",33.9],["Granulated sugar",18.3],["Salt",3.1],["Instant yeast",1.4],["Malt",0.8],["Butter",5.5],["Preferment",87.5],["Butter",62.5]]},{"name":"Danish with Biga","rows":[["Bread flour",100.0],["Milk",45.2],["Eggs",15.9],["Granulated sugar",17.5],["Salt",3.2],["Instant yeast",1.8],["Butter",4.0],["Preferment",66.7],["Butter",68.3]]}]},{"week":"Week 11","recipes":[{"name":"Shortdough","rows":[["Cake flour",100.0],["Butter",66.7],["Powdered sugar",33.3],["Eggs",11.0]]}]},{"week":"Weeks 12-13","recipes":[{"name":"Carrot Cake","rows":[["Bread flour",100.0],["Granulated sugar",80.0],["Brown sugar",80.0],["Oil",120.0],["Eggs",80.0],["Baking soda",1.8],["Baking powder",3.5],["Cinnamon",1.8],["Nutmeg",0.4],["Salt",1.8],["Fruit",160.0]]},{"name":"Chocolate Chiffon","rows":[["Cake flour",100.0],["Water",100.0],["Cocoa powder",26.3],["Oil",68.4],["Egg yolks",100.0],["Vanilla",3.5],["Granulated sugar",199.1],["Baking soda",7.9],["Egg whites",149.1],["Granulated sugar",39.5]]},{"name":"Momofuku Birthday Cake","rows":[["Cake flour",100.0],["Butter",88.9],["Granulated sugar",111.1],["Salt",1.1],["Honey",18.6],["Vanilla",5.7],["Eggs",55.7],["Baking powder",2.7],["Custom",33.9,"Rainbow sprinkles"],["Buttermilk",66.7]]},{"name":"Cream Cheese Pound Cake","rows":[["Cake flour",100.0],["Butter",50.0],["Cream cheese",16.7],["Granulated sugar",175.0],["Salt",0.4],["Citrus zest",1.8],["Eggs",100.0],["Vanilla",2.5],["Custom",1.2,"Almond extract"],["Heavy cream",66.7]]}]},{"week":"Final","recipes":[{"name":"Cinnamon Crunch Banana Bread","rows":[["AP flour",100.0],["Granulated sugar",105.3],["Cinnamon",1.4],["Nutmeg",0.2],["Baking soda",3.2],["Salt",0.8],["Oil",52.6],["Eggs",52.6],["Honey",44.7],["Fruit",184.2],["Citrus juice",7.9],["Water",30.0]]},{"name":"Biscuit","rows":[["AP flour",100.0],["Baking powder",4.7],["Baking soda",0.3],["Salt",0.7],["Butter",12.5],["Shortening",12.5],["Buttermilk",72.0]]},{"name":"Blueberry Buckle Coffeecake","rows":[["AP flour",100.0],["Butter",23.5],["Granulated sugar",61.8],["Eggs",23.0],["Vanilla",1.9],["Baking powder",2.8],["Salt",1.2],["Milk",47.0],["Fruit",117.1]]},{"name":"Choco Pan de Coco","rows":[["AP flour",50.0],["Bread flour",50.0],["Custom",44.4,"Coconut milk"],["Water",28.4],["Preferment",44.4],["Instant yeast",1.3],["Coconut",27.8],["Cocoa powder",5.6],["Butter",6.7],["Brown sugar",6.7],["Salt",2.2],["Chocolate",11.1]]}]}];
 
   var SAMPLE = {
-    mode: 'check', theme: 'system', unit: 'g', target: 1000, factor: 1, recipe: '',
+    mode: 'check', theme: 'system', unit: 'g', target: 1000, factor: 1, recipe: '', recipeName: '',
     rows: [
       { ing: 'Bread flour', pct: 100, ans: '' },
       { ing: 'Water', pct: 68, ans: '' },
@@ -607,6 +607,8 @@
   var sScoreItem = document.getElementById('s-score-item');
   var sScore = document.getElementById('s-score');
   var recipeEl = document.getElementById('recipe');
+  var recipeNameWrap = document.getElementById('recipe-name-wrap');
+  var recipeNameEl = document.getElementById('recipe-name');
   var exportOpen = document.getElementById('export-open');
   var exportEl = document.getElementById('export');
   var filenameEl = document.getElementById('filename');
@@ -615,6 +617,7 @@
 
   function clone(o) { return JSON.parse(JSON.stringify(o)); }
   function isFlour(name) { return FLOURS.indexOf(name) !== -1; }
+  function displayName(row) { return row.ing === 'Custom' ? (String(row.label || '').trim() || 'Custom') : row.ing; }
   function num(v) { return v === '' || v === null || v === undefined ? NaN : Number(v); }
   function unit() { return UNITS[state.unit] || UNITS.g; }
   function roundTo(n, d) { var p = Math.pow(10, d); return Math.round(n * p) / p; }
@@ -638,10 +641,13 @@
       if (!o.themeChosen || (o.theme !== 'light' && o.theme !== 'dark')) o.theme = 'system';
       if (!UNITS[o.unit]) o.unit = 'g';
       o.rows.forEach(function (r) {
-        if (FLOURS.indexOf(r.ing) === -1 && OTHERS.indexOf(r.ing) === -1) {
-          r.ing = /flour|semolina/i.test(r.ing) ? 'Other flour' : 'Misc';
+        if (r.ing === 'Misc') { r.ing = 'Custom'; }
+        else if (FLOURS.indexOf(r.ing) === -1 && OTHERS.indexOf(r.ing) === -1) {
+          if (/flour|semolina/i.test(r.ing)) { r.ing = 'Other flour'; }
+          else { r.label = r.label || r.ing; r.ing = 'Custom'; }
         }
       });
+      if (typeof o.recipeName !== 'string') o.recipeName = o.recipe || '';
       return o;
     } catch (e) { return null; }
   }
@@ -667,10 +673,26 @@
 
     var sel = buildSelect(row, i);
     sel.addEventListener('change', function () {
+      var wasCustom = row.ing === 'Custom';
       row.ing = sel.value;
       li.classList.toggle('is-flour', isFlour(row.ing));
-      markCustom(); invalidate(); save();
+      markCustom(); save();
+      if (wasCustom !== (row.ing === 'Custom')) {
+        renderRows(); invalidate();
+        var c = document.getElementById('label-' + i);
+        if (c) c.focus();
+      } else { invalidate(); }
     });
+
+    var custom = null;
+    if (row.ing === 'Custom') {
+      custom = document.createElement('input');
+      custom.type = 'text'; custom.id = 'label-' + i; custom.className = 'custom-name';
+      custom.placeholder = 'Ingredient name'; custom.autocomplete = 'off'; custom.enterKeyHint = 'next';
+      custom.setAttribute('aria-label', 'Custom ingredient name');
+      custom.value = row.label || '';
+      custom.addEventListener('input', function () { row.label = custom.value; save(); });
+    }
 
     var pct = document.createElement('input');
     pct.type = 'number'; pct.id = 'pct-' + i;
@@ -706,7 +728,7 @@
 
     var rm = document.createElement('button');
     rm.type = 'button'; rm.className = 'remove'; rm.innerHTML = '&times;';
-    rm.setAttribute('aria-label', 'Remove ' + row.ing);
+    rm.setAttribute('aria-label', 'Remove ' + displayName(row));
     rm.addEventListener('click', function () {
       state.rows.splice(i, 1);
       markCustom(); renderRows(); invalidate(); save();
@@ -715,7 +737,9 @@
     var note = document.createElement('div');
     note.className = 'note'; note.id = 'note-' + i; note.hidden = true;
 
-    li.appendChild(sel); li.appendChild(pct); li.appendChild(wt); li.appendChild(rm); li.appendChild(note);
+    li.appendChild(sel); li.appendChild(pct); li.appendChild(wt); li.appendChild(rm);
+    if (custom) li.appendChild(custom);
+    li.appendChild(note);
     return li;
   }
 
@@ -823,8 +847,8 @@
     var u = unit();
     lastRun = {
       mode: state.mode, unit: u.label, target: num(state.target), factor: r.factor, scaled: r.scaled,
-      totalPct: r.totalPct, recipe: state.recipe || 'Custom recipe', correct: 0,
-      rows: state.rows.map(function (row, i) { return { ing: row.ing, pct: Number(row.pct), expected: r.weights[i], ans: num(row.ans), ok: null }; })
+      totalPct: r.totalPct, recipe: String(state.recipeName || '').trim() || 'Custom recipe', correct: 0,
+      rows: state.rows.map(function (row, i) { return { ing: displayName(row), pct: Number(row.pct), expected: r.weights[i], ans: num(row.ans), ok: null }; })
     };
     exportOpen.hidden = false;
 
@@ -885,7 +909,12 @@
       });
       recipeEl.appendChild(g);
     });
+    renderRecipe();
+  }
+  function renderRecipe() {
     recipeEl.value = state.recipe || '';
+    recipeNameWrap.hidden = !!state.recipe;
+    recipeNameEl.value = state.recipeName || '';
   }
   function findTemplate(name) {
     for (var i = 0; i < TEMPLATES.length; i++) {
@@ -897,17 +926,23 @@
   }
   function markCustom() {
     if (!state.recipe) return;
-    state.recipe = ''; recipeEl.value = '';
+    state.recipe = '';
+    renderRecipe();
   }
   recipeEl.addEventListener('change', function () {
     var t = findTemplate(recipeEl.value);
     state.recipe = t ? t.name : '';
     if (t) {
-      state.rows = t.rows.map(function (r) { return { ing: r[0], pct: r[1], ans: '' }; });
+      state.recipeName = t.name;
+      state.rows = t.rows.map(function (r) { return { ing: r[0], pct: r[1], ans: '', label: r[2] || '' }; });
       renderRows();
     }
+    renderRecipe();
+    if (!t) recipeNameEl.focus();
     invalidate(); save();
   });
+  recipeNameEl.addEventListener('input', function () { state.recipeName = recipeNameEl.value; save(); });
+  recipeNameEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); targetEl.focus(); } });
 
   /* ---------- units ---------- */
 
@@ -951,9 +986,9 @@
   });
 
   document.getElementById('clear').addEventListener('click', function () {
-    state.rows = []; state.target = ''; state.factor = '';
+    state.rows = []; state.target = ''; state.factor = ''; state.recipeName = '';
     targetEl.value = ''; factorEl.value = '';
-    markCustom();
+    markCustom(); renderRecipe();
     renderRows(); invalidate(); save();
     targetEl.focus();
   });
