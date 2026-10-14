@@ -23,6 +23,10 @@ Type the weight you worked out for each ingredient. Each row is marked correct o
 
 After a calculation or check, tap **Save** to keep a copy of the results on your device as a spreadsheet (.xlsx) or a plain text table (.txt). The filename can be edited before saving. Nothing is uploaded or stored anywhere else.
 
+### My recipes
+
+Tap **Save to My recipes** above the Recipe dropdown to keep the current recipe on this device, including its name, unit, target weight, factor, ingredients, and any answers typed so far. Saved recipes appear in a **My recipes** group at the top of the dropdown. Saving again under the same name updates it, and **Delete** removes it after a second tap to confirm. Recipes are stored in the browser on that device only and are never uploaded.
+
 ### Settings
 
 Press and hold the title for about half a second to open settings. There you can switch between **Check** and **Calculate** mode and choose a **System**, **Light**, or **Dark** theme. Check mode is the default.

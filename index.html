@@ -244,6 +244,36 @@
     margin-top: -1px;
   }
   .recipe-name { height: 36px; font-size: 14px; }
+  .labelrow { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .recipe-actions { display: flex; gap: 12px; }
+  .linkbtn {
+    font: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    border: 0;
+    background: transparent;
+    color: var(--accent);
+    padding: 0 0 4px;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    white-space: nowrap;
+  }
+  .linkbtn.danger { color: var(--bad); }
+  .toast {
+    position: fixed;
+    top: calc(12px + env(safe-area-inset-top, 0px));
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: calc(100% - 32px);
+    background: var(--ink);
+    color: var(--paper);
+    font-size: 14px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    z-index: 20;
+    pointer-events: none;
+  }
   #recipe-name-wrap { margin-top: -4px; }
   .setup {
     display: grid;
@@ -460,7 +490,13 @@
   </header>
 
   <div class="field recipe">
-    <label for="recipe">Recipe</label>
+    <div class="labelrow">
+      <label for="recipe">Recipe</label>
+      <div class="recipe-actions">
+        <button type="button" class="linkbtn" id="recipe-save" hidden>Save to My recipes</button>
+        <button type="button" class="linkbtn" id="recipe-delete" hidden>Delete</button>
+      </div>
+    </div>
     <select id="recipe"></select>
   </div>
   <div class="field recipe" id="recipe-name-wrap">
@@ -514,6 +550,8 @@
     <p class="hint" id="hint">Flour is 100%. Every other ingredient is a percentage of the flour.</p>
   </div>
 </form>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <div class="overlay" id="export" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="export-title">
@@ -611,6 +649,10 @@
   var sScore = document.getElementById('s-score');
   var recipeEl = document.getElementById('recipe');
   var recipeNameWrap = document.getElementById('recipe-name-wrap');
+  var recipeSaveBtn = document.getElementById('recipe-save');
+  var recipeDeleteBtn = document.getElementById('recipe-delete');
+  var toastEl = document.getElementById('toast');
+  var myGroup = null;
   var recipeNameEl = document.getElementById('recipe-name');
   var exportOpen = document.getElementById('export-open');
   var exportEl = document.getElementById('export');
@@ -634,6 +676,25 @@
     return roundTo(n, d).toLocaleString(undefined, { maximumFractionDigits: d });
   }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+  var MY_KEY = 'bakers-math-myrecipes-v1';
+  function loadMine() {
+    try {
+      var a = JSON.parse(localStorage.getItem(MY_KEY) || '[]');
+      return Array.isArray(a) ? a.filter(function (r) { return r && r.id && r.name && Array.isArray(r.rows); }) : [];
+    } catch (e) { return []; }
+  }
+  function saveMine(list) { try { localStorage.setItem(MY_KEY, JSON.stringify(list)); return true; } catch (e) { return false; } }
+  function findMine(id) {
+    var list = loadMine();
+    for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+    return null;
+  }
+  var toastTimer = null;
+  function toast(text) {
+    toastEl.textContent = text; toastEl.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.hidden = true; }, 2200);
+  }
   function load() {
     try {
       var s = localStorage.getItem(KEY);
@@ -651,6 +712,7 @@
         }
       });
       if (typeof o.recipeName !== 'string') o.recipeName = o.recipe || '';
+      if (typeof o.recipe === 'string' && o.recipe.indexOf('my:') === 0 && !findMine(o.recipe.slice(3))) o.recipe = '';
       return o;
     } catch (e) { return null; }
   }
@@ -768,6 +830,7 @@
     state.rows.forEach(function (row, i) { list.appendChild(buildRow(row, i)); });
     emptyMsg.hidden = state.rows.length > 0;
     list.hidden = state.rows.length === 0;
+    if (myGroup) renderRecipe();
   }
 
   function renderMode() {
@@ -922,6 +985,9 @@
     var ph = document.createElement('option');
     ph.value = ''; ph.textContent = 'Custom recipe';
     recipeEl.appendChild(ph);
+    myGroup = document.createElement('optgroup'); myGroup.label = 'My recipes';
+    recipeEl.appendChild(myGroup);
+    renderMyGroup();
     TEMPLATES.forEach(function (w) {
       var g = document.createElement('optgroup'); g.label = w.week;
       w.recipes.forEach(function (r) {
@@ -931,6 +997,14 @@
     });
     renderRecipe();
   }
+  function renderMyGroup() {
+    myGroup.innerHTML = '';
+    var list = loadMine();
+    list.forEach(function (r) {
+      var o = document.createElement('option'); o.value = 'my:' + r.id; o.textContent = r.name; myGroup.appendChild(o);
+    });
+    myGroup.hidden = list.length === 0;
+  }
   var recipeEditing = false;
   function renderRecipe() {
     var name = String(state.recipeName || '').trim();
@@ -938,6 +1012,12 @@
     recipeEl.value = state.recipe || '';
     recipeNameWrap.hidden = !!state.recipe || (!!name && !recipeEditing);
     if (document.activeElement !== recipeNameEl) recipeNameEl.value = state.recipeName || '';
+    var isSaved = String(state.recipe || '').indexOf('my:') === 0;
+    recipeSaveBtn.hidden = state.rows.length === 0;
+    recipeSaveBtn.textContent = isSaved ? 'Saved' : 'Save to My recipes';
+    recipeSaveBtn.disabled = isSaved;
+    recipeDeleteBtn.hidden = !isSaved;
+    resetDelete();
   }
   function findTemplate(name) {
     for (var i = 0; i < TEMPLATES.length; i++) {
@@ -953,6 +1033,20 @@
     renderRecipe();
   }
   recipeEl.addEventListener('change', function () {
+    if (recipeEl.value.indexOf('my:') === 0) {
+      var m = findMine(recipeEl.value.slice(3));
+      if (m) {
+        state.recipe = 'my:' + m.id;
+        state.recipeName = m.name;
+        if (UNITS[m.unit]) state.unit = m.unit;
+        state.target = m.target; state.factor = m.factor;
+        targetEl.value = state.target === '' ? '' : state.target;
+        factorEl.value = (state.factor === '' || Number(state.factor) === 1) ? '' : state.factor;
+        state.rows = m.rows.map(function (r) { return { ing: r.ing, pct: r.pct, ans: r.ans === undefined ? '' : r.ans, label: r.label || '' }; });
+        renderUnit(); renderMode(); renderRows(); renderRecipe(); invalidate(); save();
+        return;
+      }
+    }
     var t = findTemplate(recipeEl.value);
     state.recipe = t ? t.name : '';
     if (t) {
@@ -964,6 +1058,45 @@
     renderRecipe();
     if (!t) recipeNameEl.focus();
     invalidate(); save();
+  });
+  recipeSaveBtn.addEventListener('click', function () {
+    var name = String(state.recipeName || '').trim();
+    if (state.rows.length === 0) { toast('Add ingredients first'); return; }
+    if (!name) {
+      state.recipe = ''; recipeEditing = true; renderRecipe(); recipeNameEl.focus();
+      toast('Give the recipe a name first');
+      return;
+    }
+    var list = loadMine(), existing = null;
+    for (var i = 0; i < list.length; i++) if (list[i].name.toLowerCase() === name.toLowerCase()) existing = list[i];
+    var rec = {
+      id: existing ? existing.id : String(Date.now()),
+      name: name, savedAt: new Date().toISOString(), unit: state.unit, target: state.target, factor: state.factor,
+      rows: state.rows.map(function (r) { return { ing: r.ing, label: r.label || '', pct: r.pct, ans: r.ans }; })
+    };
+    if (existing) list[list.indexOf(existing)] = rec; else list.push(rec);
+    list.sort(function (a, b) { return a.name.localeCompare(b.name); });
+    if (!saveMine(list)) { toast('Could not save on this device'); return; }
+    state.recipe = 'my:' + rec.id;
+    renderMyGroup(); renderRecipe(); save();
+    toast(existing ? 'Updated in My recipes' : 'Saved to My recipes');
+  });
+  var deleteArmed = null;
+  function resetDelete() {
+    clearTimeout(deleteArmed); deleteArmed = null;
+    recipeDeleteBtn.textContent = 'Delete'; recipeDeleteBtn.classList.remove('danger');
+  }
+  recipeDeleteBtn.addEventListener('click', function () {
+    if (!deleteArmed) {
+      recipeDeleteBtn.textContent = 'Tap again to delete'; recipeDeleteBtn.classList.add('danger');
+      deleteArmed = setTimeout(resetDelete, 3000);
+      return;
+    }
+    var id = String(state.recipe).slice(3);
+    saveMine(loadMine().filter(function (r) { return r.id !== id; }));
+    state.recipe = '';
+    renderMyGroup(); renderRecipe(); save();
+    toast('Deleted from My recipes');
   });
   recipeEl.addEventListener('focus', function () {
     if (!state.recipe) { recipeEditing = true; renderRecipe(); }
