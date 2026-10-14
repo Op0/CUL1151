@@ -170,6 +170,12 @@
     text-transform: uppercase;
     color: var(--muted);
   }
+  .opt .link {
+    color: var(--accent);
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
   @media (min-width: 600px) {
     .overlay { align-items: center; }
   }
@@ -532,6 +538,10 @@
         <button type="button" id="set-light" aria-pressed="false">Light</button>
         <button type="button" id="set-dark" aria-pressed="false">Dark</button>
       </div>
+    </div>
+    <div class="opt">
+      <span class="k">Web version</span>
+      <a class="link" href="https://op0.github.io/CUL1151/" target="_blank" rel="noopener">op0.github.io/CUL1151</a>
     </div>
     <button type="button" class="primary" id="settings-done">Done</button>
   </div>
