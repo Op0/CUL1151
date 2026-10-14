@@ -243,6 +243,8 @@
     font-size: 14px;
     margin-top: -1px;
   }
+  .recipe-name { height: 36px; font-size: 14px; }
+  #recipe-name-wrap { margin-top: -4px; }
   .setup {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -462,8 +464,7 @@
     <select id="recipe"></select>
   </div>
   <div class="field recipe" id="recipe-name-wrap">
-    <label for="recipe-name">Recipe name</label>
-    <input type="text" id="recipe-name" autocomplete="off" placeholder="Used for the saved file" enterkeyhint="next">
+    <input type="text" id="recipe-name" class="recipe-name" autocomplete="off" placeholder="Enter a recipe name" enterkeyhint="next" aria-label="Recipe name">
   </div>
   <div class="setup">
     <div class="field">
@@ -661,7 +662,11 @@
     var g1 = document.createElement('optgroup'); g1.label = 'Flour (adds up to 100%)';
     FLOURS.forEach(function (n) { var o = document.createElement('option'); o.value = n; o.textContent = n; g1.appendChild(o); });
     var g2 = document.createElement('optgroup'); g2.label = 'Everything else (% of flour)';
-    OTHERS.forEach(function (n) { var o = document.createElement('option'); o.value = n; o.textContent = n; g2.appendChild(o); });
+    OTHERS.forEach(function (n) {
+      var o = document.createElement('option'); o.value = n;
+      o.textContent = n === 'Custom' ? displayName(row) : n;
+      g2.appendChild(o);
+    });
     sel.appendChild(g1); sel.appendChild(g2);
     sel.value = row.ing;
     return sel;
@@ -691,7 +696,20 @@
       custom.placeholder = 'Ingredient name'; custom.autocomplete = 'off'; custom.enterKeyHint = 'next';
       custom.setAttribute('aria-label', 'Custom ingredient name');
       custom.value = row.label || '';
-      custom.addEventListener('input', function () { row.label = custom.value; save(); });
+      custom.hidden = !!String(row.label || '').trim();
+      custom.addEventListener('input', function () {
+        row.label = custom.value;
+        var o = sel.querySelector('option[value="Custom"]');
+        if (o) o.textContent = displayName(row);
+        rm.setAttribute('aria-label', 'Remove ' + displayName(row));
+        save();
+      });
+      custom.addEventListener('blur', function () {
+        if (String(row.label || '').trim()) custom.hidden = true;
+      });
+      sel.addEventListener('focus', function () {
+        if (row.ing === 'Custom') custom.hidden = false;
+      });
     }
 
     var pct = document.createElement('input');
@@ -911,10 +929,13 @@
     });
     renderRecipe();
   }
+  var recipeEditing = false;
   function renderRecipe() {
+    var name = String(state.recipeName || '').trim();
+    recipeEl.options[0].textContent = name || 'Custom recipe';
     recipeEl.value = state.recipe || '';
-    recipeNameWrap.hidden = !!state.recipe;
-    recipeNameEl.value = state.recipeName || '';
+    recipeNameWrap.hidden = !!state.recipe || (!!name && !recipeEditing);
+    if (document.activeElement !== recipeNameEl) recipeNameEl.value = state.recipeName || '';
   }
   function findTemplate(name) {
     for (var i = 0; i < TEMPLATES.length; i++) {
@@ -937,11 +958,20 @@
       state.rows = t.rows.map(function (r) { return { ing: r[0], pct: r[1], ans: '', label: r[2] || '' }; });
       renderRows();
     }
+    recipeEditing = !t;
     renderRecipe();
     if (!t) recipeNameEl.focus();
     invalidate(); save();
   });
-  recipeNameEl.addEventListener('input', function () { state.recipeName = recipeNameEl.value; save(); });
+  recipeEl.addEventListener('focus', function () {
+    if (!state.recipe) { recipeEditing = true; renderRecipe(); }
+  });
+  recipeNameEl.addEventListener('input', function () {
+    state.recipeName = recipeNameEl.value;
+    recipeEl.options[0].textContent = String(state.recipeName || '').trim() || 'Custom recipe';
+    save();
+  });
+  recipeNameEl.addEventListener('blur', function () { recipeEditing = false; renderRecipe(); });
   recipeNameEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); targetEl.focus(); } });
 
   /* ---------- units ---------- */
