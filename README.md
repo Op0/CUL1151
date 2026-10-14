@@ -17,7 +17,7 @@ Weights can be in grams or ounces. The **g / oz** switch sits above the ingredie
 
 ### Check mode
 
-Type the weight you worked out for each ingredient. Each row is marked correct or incorrect against the expected weight, and the score appears in the bottom line. Answers within 1 g (or 0.05 oz) count as correct so whole-gram rounding passes.
+Type the weight you worked out for each ingredient. Each row is marked correct or incorrect against the expected weight, and the score appears in the bottom line. Answers within 1% of the expected weight count as correct, with a floor of 1 g (or 0.05 oz) so rounding on small amounts like salt and yeast still passes.
 
 ### Saving results
 
