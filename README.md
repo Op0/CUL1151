@@ -2,7 +2,7 @@
 
 A phone-friendly baker's percentage calculator and math checker for CUL 1151 Baking. It is a single HTML file with no build step and no server.
 
-Live copy: https://claude.ai/artifact/XFHD8Dn4WznqnSGXbPvwv9
+Live copy: https://op0.github.io/CUL1151/
 
 ## Using it
 
