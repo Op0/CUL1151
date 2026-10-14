@@ -1,0 +1,1139 @@
+<title>CUL-1151 Baker's Math</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --paper: #F6F3EC;
+    --surface: #FFFFFF;
+    --ink: #1E1A15;
+    --muted: #6F675C;
+    --line: #D9D2C5;
+    --flour: #F3E5C3;
+    --flour-ink: #5A4410;
+    --accent: #B5750C;
+    --accent-ink: #FFFFFF;
+    --good: #25703F;
+    --good-bg: #E1F1E6;
+    --bad: #B3261E;
+    --bad-bg: #FBE5E2;
+    --warn: #7D5200;
+    --warn-bg: #FFF0CC;
+    --display: "Bitter", Georgia, "Times New Roman", serif;
+    --body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+    --mono: "IBM Plex Mono", "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --paper: #171511;
+      --surface: #221F19;
+      --ink: #EEE8DC;
+      --muted: #A79E8F;
+      --line: #3B362C;
+      --flour: #3A3019;
+      --flour-ink: #EACB7E;
+      --accent: #E2A332;
+      --accent-ink: #1B1507;
+      --good: #74CF97;
+      --good-bg: #1B3326;
+      --bad: #F39089;
+      --bad-bg: #3E1F1B;
+      --warn: #F2C56A;
+      --warn-bg: #3A2D10;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --paper: #171511;
+    --surface: #221F19;
+    --ink: #EEE8DC;
+    --muted: #A79E8F;
+    --line: #3B362C;
+    --flour: #3A3019;
+    --flour-ink: #EACB7E;
+    --accent: #E2A332;
+    --accent-ink: #1B1507;
+    --good: #74CF97;
+    --good-bg: #1B3326;
+    --bad: #F39089;
+    --bad-bg: #3E1F1B;
+    --warn: #F2C56A;
+    --warn-bg: #3A2D10;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { height: 100%; -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    min-height: 100%;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.4;
+  }
+  .app {
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 0 16px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+  }
+
+  /* Header */
+  .top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-block: 14px 10px;
+  }
+  h1 {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 22px;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .seg {
+    display: inline-flex;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 3px;
+    background: var(--surface);
+  }
+  .seg button {
+    font: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    padding: 6px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .seg button[aria-pressed="true"] {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  h1 {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    cursor: default;
+  }
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 16, 10, 0.45);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 16px;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    z-index: 10;
+  }
+  .sheet {
+    width: 100%;
+    max-width: 420px;
+    background: var(--surface);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .sheet h2 {
+    font-family: var(--display);
+    font-size: 18px;
+    margin: 0;
+  }
+  .opt {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .opt .k {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  @media (min-width: 600px) {
+    .overlay { align-items: center; }
+  }
+  .seg.small { padding: 2px; }
+  .seg.small button {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 2px 8px;
+    min-width: 28px;
+    height: 20px;
+    line-height: 1;
+  }
+
+  /* Labels and inputs */
+  label, .colhead span {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  input, select {
+    font-family: var(--body);
+    font-size: 16px;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    height: 40px;
+    padding: 0 8px;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+  }
+  input[type="number"] {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 26px;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' fill='none' stroke='%23807868' stroke-width='1.8' stroke-linecap='round'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 9px center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  input:focus-visible, select:focus-visible, button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+  .recipe { margin-bottom: 10px; }
+  .setup {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .field { position: relative; }
+  .field .unit {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    font-size: 13px;
+    color: var(--muted);
+    pointer-events: none;
+  }
+  .field input { padding-right: 34px; }
+
+  /* Ingredient list */
+  .colhead, .row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 66px 84px 30px;
+    gap: 6px;
+    align-items: center;
+  }
+  .colhead { padding: 0 8px; margin-bottom: 4px; }
+  .colhead span { margin: 0; }
+  .colhead .num { text-align: right; }
+  .colhead .seg { justify-self: end; }
+  .list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .row {
+    padding: 7px 8px;
+    border-top: 1px solid var(--line);
+  }
+  .row:first-child { border-top: 0; }
+  .row.is-flour { background: var(--flour); }
+  .row.is-flour select { color: var(--flour-ink); font-weight: 500; }
+  .row.is-ok { box-shadow: inset 4px 0 0 var(--good); }
+  .row.is-bad { box-shadow: inset 4px 0 0 var(--bad); }
+  .wt {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    font-size: 16px;
+    padding-right: 4px;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .wt.empty { color: var(--muted); }
+  .wt small { font-family: var(--body); font-size: 12px; color: var(--muted); margin-left: 2px; }
+  .remove {
+    font: inherit;
+    width: 30px;
+    height: 40px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+  }
+  .remove:hover { color: var(--bad); background: var(--bad-bg); }
+  .note {
+    grid-column: 1 / -1;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    padding-top: 2px;
+  }
+  .note.ok { color: var(--good); }
+  .note.bad { color: var(--bad); }
+  .empty-msg {
+    padding: 18px 12px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .list-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 10px;
+  }
+  .add {
+    flex: 1;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    height: 44px;
+    border: 1.5px dashed var(--line);
+    border-radius: 9px;
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .add:hover { border-color: var(--accent); color: var(--accent); }
+  .clear {
+    font: inherit;
+    font-size: 14px;
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    padding: 8px 6px;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* Messages */
+  .msg {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+  .msg.err { background: var(--bad-bg); color: var(--bad); }
+  .msg.warn { background: var(--warn-bg); color: var(--warn); }
+
+  /* Sticky action bar with the bottom line */
+  .spacer { flex: 1; min-height: 16px; }
+  .actionbar {
+    position: sticky;
+    bottom: 0;
+    background: var(--paper);
+    border-top: 1px solid var(--line);
+    padding: 8px 0 calc(10px + env(safe-area-inset-bottom, 0px));
+    margin: 0 -16px;
+    padding-inline: 16px;
+  }
+  .line {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 6px 12px;
+    margin-bottom: 8px;
+    padding: 0 2px;
+  }
+  .line .item { display: flex; align-items: baseline; gap: 5px; min-width: 0; }
+  .line .k {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .line .v {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 15px;
+    white-space: nowrap;
+  }
+  .line .v.off { color: var(--warn); }
+  .line .v.good { color: var(--good); }
+  .line .v.bad { color: var(--bad); }
+  .primary {
+    width: 100%;
+    height: 50px;
+    font: inherit;
+    font-size: 17px;
+    font-weight: 600;
+    border: 0;
+    border-radius: 10px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    cursor: pointer;
+  }
+  .primary:active { filter: brightness(0.92); }
+  .actions { display: flex; gap: 8px; }
+  .actions .primary { flex: 1; }
+  .secondary {
+    font: inherit;
+    font-size: 16px;
+    font-weight: 600;
+    height: 50px;
+    padding: 0 18px;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .export-btns { display: flex; flex-direction: column; gap: 8px; }
+  .export-btns .secondary { height: 46px; }
+  .export-note { text-align: left; margin: 0; }
+  .sheet .clear { align-self: center; }
+  .sheet .msg { margin-top: 0; }
+  .hint {
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    margin: 8px 0 0;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .row { transition: box-shadow 150ms ease; }
+  }
+</style>
+
+<form class="app" id="app" novalidate>
+  <header class="top">
+    <h1 id="title">CUL-1151 Baker's Math</h1>
+  </header>
+
+  <div class="field recipe">
+    <label for="recipe">Recipe</label>
+    <select id="recipe"></select>
+  </div>
+  <div class="setup">
+    <div class="field">
+      <label for="target">Target dough weight</label>
+      <input type="number" id="target" inputmode="decimal" min="0" step="any" placeholder="1000" enterkeyhint="next" required>
+      <span class="unit" id="target-unit">g</span>
+    </div>
+    <div class="field">
+      <label for="factor">Conversion factor</label>
+      <input type="number" id="factor" inputmode="decimal" min="0" step="any" placeholder="1" enterkeyhint="next">
+      <span class="unit">×</span>
+    </div>
+  </div>
+
+  <div class="colhead">
+    <span>Ingredient</span>
+    <span class="num">%</span>
+    <div class="seg small" role="group" aria-label="Weight units">
+      <button type="button" id="unit-g" aria-pressed="true">g</button>
+      <button type="button" id="unit-oz" aria-pressed="false">oz</button>
+    </div>
+    <span></span>
+  </div>
+  <ul class="list" id="list"></ul>
+  <p class="empty-msg" id="empty" hidden>No ingredients yet. Add flour first, then everything else.</p>
+
+  <div class="list-actions">
+    <button type="button" class="add" id="add">+ Add ingredient</button>
+    <button type="button" class="clear" id="clear">Clear</button>
+  </div>
+
+  <div class="msg err" id="error" hidden></div>
+  <div class="msg warn" id="warning" hidden></div>
+
+  <div class="spacer"></div>
+  <div class="actionbar">
+    <div class="line" aria-live="polite">
+      <div class="item"><span class="k">Total</span><span class="v" id="s-total">—</span></div>
+      <div class="item"><span class="k">Dough</span><span class="v" id="s-dough">—</span></div>
+      <div class="item"><span class="k">Factor</span><span class="v" id="s-factor">×1</span></div>
+      <div class="item" id="s-score-item" hidden><span class="k">Score</span><span class="v" id="s-score">—</span></div>
+    </div>
+    <div class="actions">
+      <button type="submit" class="primary" id="go">Calculate</button>
+      <button type="button" class="secondary" id="export-open" hidden>Save</button>
+    </div>
+    <p class="hint" id="hint">Flour is 100%. Every other ingredient is a percentage of the flour.</p>
+  </div>
+</form>
+
+<div class="overlay" id="export" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="export-title">
+    <h2 id="export-title">Save results</h2>
+    <div class="field">
+      <label for="filename">Filename</label>
+      <input type="text" id="filename" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done">
+    </div>
+    <p class="hint export-note" id="export-note">Saves a copy of these results to your device: every ingredient, its percentage, and the weights.</p>
+    <div class="export-btns">
+      <button type="button" class="primary" id="export-xlsx">Spreadsheet (.xlsx)</button>
+      <button type="button" class="secondary" id="export-txt">Text table (.txt)</button>
+    </div>
+    <div class="msg err" id="export-error" hidden></div>
+    <button type="button" class="clear" id="export-cancel">Cancel</button>
+  </div>
+</div>
+
+<div class="overlay" id="settings" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <h2 id="settings-title">Settings</h2>
+    <div class="opt">
+      <span class="k">Mode</span>
+      <div class="seg" role="group" aria-label="Mode">
+        <button type="button" id="set-calc" aria-pressed="false">Calculate</button>
+        <button type="button" id="set-check" aria-pressed="true">Check</button>
+      </div>
+    </div>
+    <div class="opt">
+      <span class="k">Theme</span>
+      <div class="seg" role="group" aria-label="Theme">
+        <button type="button" id="set-system" aria-pressed="true">System</button>
+        <button type="button" id="set-light" aria-pressed="false">Light</button>
+        <button type="button" id="set-dark" aria-pressed="false">Dark</button>
+      </div>
+    </div>
+    <button type="button" class="primary" id="settings-done">Done</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  var FLOURS = ['Bread flour', 'AP flour', 'Whole wheat flour', 'Cake flour', 'Pastry flour', 'Rye flour', 'Other flour'];
+  var OTHERS = [
+    'Water', 'Milk', 'Buttermilk', 'Heavy cream', 'Sour cream',
+    'Butter', 'Oil', 'Shortening', 'Cream cheese',
+    'Eggs', 'Egg yolks', 'Egg whites',
+    'Granulated sugar', 'Brown sugar', 'Powdered sugar', 'Honey',
+    'Salt', 'Instant yeast', 'Baking powder', 'Baking soda',
+    'Vanilla', 'Cinnamon', 'Nutmeg', 'Citrus juice', 'Citrus zest', 'Cocoa powder',
+    'Chocolate', 'Nuts', 'Fruit', 'Coconut', 'Crumbs',
+    'Cornstarch', 'Gelatin', 'Malt', 'Preferment',
+    'Misc'
+  ];
+  var KEY = 'bakers-math-v2';
+  var OZ_PER_G = 0.03527396195;
+  var UNITS = {
+    g:  { label: 'g',  decimals: 1, tolerance: 1,    tolText: '1 g' },
+    oz: { label: 'oz', decimals: 2, tolerance: 0.05, tolText: '0.05 oz' }
+  };
+
+  var TEMPLATES = [{"week":"Week 1","recipes":[{"name":"Chocolate Chip Cookies","rows":[["Bread flour",100.0],["Butter",57.7],["Brown sugar",61.5],["Granulated sugar",38.5],["Vanilla",1.9],["Eggs",19.2],["Baking soda",1.4],["Baking powder",1.4],["Salt",1.4],["Chocolate",100.0]]},{"name":"Country Biscuits","rows":[["AP flour",100.0],["Salt",2.1],["Granulated sugar",5.0],["Baking powder",5.0],["Butter",35.0],["Milk",60.0]]},{"name":"Fruit Muffin","rows":[["Bread flour",100.0],["Granulated sugar",54.1],["Brown sugar",33.3],["Oil",33.3],["Eggs",29.2],["Baking powder",3.9],["Salt",1.8],["Sour cream",74.9],["Fruit",93.6]]}]},{"week":"Week 2","recipes":[{"name":"Inside Out Chocolate Chip Cookies","rows":[["AP flour",100.0],["Butter",45.2],["Granulated sugar",80.0],["Brown sugar",80.0],["Eggs",40.0],["Vanilla",4.0],["Cocoa powder",44.0],["Baking soda",3.7],["Salt",0.6],["Milk",12.0],["Chocolate",180.0]]},{"name":"Sabayon Brownie Base","rows":[["Pastry flour",100.0],["Butter",135.9],["Granulated sugar",271.3],["Vanilla",7.7],["Eggs",161.7],["Cocoa powder",35.9],["Salt",1.0],["Baking powder",1.0]]},{"name":"Lemon Cream Scone","rows":[["AP flour",100.0],["Granulated sugar",11.8],["Baking powder",3.9],["Salt",0.2],["Citrus zest",1.1],["Butter",23.6],["Eggs",41.5],["Heavy cream",47.0],["Misc",2.0]]},{"name":"Pate a Choux","rows":[["Bread flour",100.0],["Water",177.8],["Butter",88.9],["Granulated sugar",8.3],["Salt",1.8],["Eggs",155.6]]}]},{"week":"Week 3","recipes":[{"name":"Banana Pecan Bread","rows":[["AP flour",100.0],["Butter",76.2],["Brown sugar",114.3],["Eggs",67.2],["Fruit",120.9],["Citrus juice",4.8],["Salt",0.5],["Baking powder",2.0],["Cinnamon",0.9],["Nutmeg",0.4],["Nuts",57.1]]},{"name":"3-2-1 Pie Dough","rows":[["AP flour",100.0],["Butter",68.1],["Salt",2.0],["Water",33.0]]},{"name":"Vodka Pie Dough","rows":[["AP flour",100.0],["Salt",0.8],["Granulated sugar",7.1],["Butter",48.0],["Shortening",32.0],["Misc",8.0],["Water",8.0]]}]},{"week":"Week 5","recipes":[{"name":"Baguette with Poolish","rows":[["Bread flour",100.0],["Water",50.8],["Instant yeast",0.6],["Salt",3.0],["Malt",0.8],["Preferment",98.0]]},{"name":"Focaccia with Poolish","rows":[["Bread flour",96.6],["Rye flour",3.4],["Preferment",48.3],["Water",53.1],["Oil",8.2],["Instant yeast",0.7],["Salt",3.7]]}]},{"week":"Week 6","recipes":[{"name":"Brioche","rows":[["AP flour",100.0],["Misc",8.5],["Granulated sugar",10.6],["Instant yeast",2.7],["Eggs",44.0],["Water",17.3],["Salt",2.4],["Butter",43.1]]},{"name":"Challah","rows":[["Bread flour",100.0],["Milk",36.0],["Butter",16.0],["Granulated sugar",9.0],["Honey",4.0],["Eggs",21.0],["Salt",2.0],["Preferment",25.3]]},{"name":"Cinnamon Roll Wreath","rows":[["AP flour",100.0],["Milk",53.3],["Granulated sugar",13.3],["Instant yeast",1.1],["Eggs",13.3],["Butter",22.7],["Salt",1.1]]}]},{"week":"Week 7","recipes":[{"name":"Puff Pastry","rows":[["Bread flour",100.0],["Water",50.0],["Butter",10.4],["Salt",2.2],["Malt",1.1],["Citrus juice",1.1],["Butter",83.3]]}]},{"week":"Weeks 8-9","recipes":[{"name":"Croissant with Poolish","rows":[["Bread flour",100.0],["Milk",33.9],["Granulated sugar",18.3],["Salt",3.1],["Instant yeast",1.4],["Malt",0.8],["Butter",5.5],["Preferment",87.5],["Butter",62.5]]},{"name":"Danish with Biga","rows":[["Bread flour",100.0],["Milk",45.2],["Eggs",15.9],["Granulated sugar",17.5],["Salt",3.2],["Instant yeast",1.8],["Butter",4.0],["Preferment",66.7],["Butter",68.3]]}]},{"week":"Week 11","recipes":[{"name":"Shortdough","rows":[["Cake flour",100.0],["Butter",66.7],["Powdered sugar",33.3],["Eggs",11.0]]}]},{"week":"Weeks 12-13","recipes":[{"name":"Carrot Cake","rows":[["Bread flour",100.0],["Granulated sugar",80.0],["Brown sugar",80.0],["Oil",120.0],["Eggs",80.0],["Baking soda",1.8],["Baking powder",3.5],["Cinnamon",1.8],["Nutmeg",0.4],["Salt",1.8],["Fruit",160.0]]},{"name":"Chocolate Chiffon","rows":[["Cake flour",100.0],["Water",100.0],["Cocoa powder",26.3],["Oil",68.4],["Egg yolks",100.0],["Vanilla",3.5],["Granulated sugar",199.1],["Baking soda",7.9],["Egg whites",149.1],["Granulated sugar",39.5]]},{"name":"Momofuku Birthday Cake","rows":[["Cake flour",100.0],["Butter",88.9],["Granulated sugar",111.1],["Salt",1.1],["Honey",18.6],["Vanilla",5.7],["Eggs",55.7],["Baking powder",2.7],["Misc",33.9],["Buttermilk",66.7]]},{"name":"Cream Cheese Pound Cake","rows":[["Cake flour",100.0],["Butter",50.0],["Cream cheese",16.7],["Granulated sugar",175.0],["Salt",0.4],["Citrus zest",1.8],["Eggs",100.0],["Vanilla",2.5],["Misc",1.2],["Heavy cream",66.7]]}]},{"week":"Final","recipes":[{"name":"Cinnamon Crunch Banana Bread","rows":[["AP flour",100.0],["Granulated sugar",105.3],["Cinnamon",1.4],["Nutmeg",0.2],["Baking soda",3.2],["Salt",0.8],["Oil",52.6],["Eggs",52.6],["Honey",44.7],["Fruit",184.2],["Citrus juice",7.9],["Water",30.0]]},{"name":"Biscuit","rows":[["AP flour",100.0],["Baking powder",4.7],["Baking soda",0.3],["Salt",0.7],["Butter",12.5],["Shortening",12.5],["Buttermilk",72.0]]},{"name":"Blueberry Buckle Coffeecake","rows":[["AP flour",100.0],["Butter",23.5],["Granulated sugar",61.8],["Eggs",23.0],["Vanilla",1.9],["Baking powder",2.8],["Salt",1.2],["Milk",47.0],["Fruit",117.1]]},{"name":"Choco Pan de Coco","rows":[["AP flour",50.0],["Bread flour",50.0],["Misc",44.4],["Water",28.4],["Preferment",44.4],["Instant yeast",1.3],["Coconut",27.8],["Cocoa powder",5.6],["Butter",6.7],["Brown sugar",6.7],["Salt",2.2],["Chocolate",11.1]]}]}];
+
+  var SAMPLE = {
+    mode: 'check', theme: 'system', unit: 'g', target: 1000, factor: 1, recipe: '',
+    rows: [
+      { ing: 'Bread flour', pct: 100, ans: '' },
+      { ing: 'Water', pct: 68, ans: '' },
+      { ing: 'Salt', pct: 2, ans: '' },
+      { ing: 'Instant yeast', pct: 1, ans: '' }
+    ]
+  };
+
+  var state = load() || clone(SAMPLE);
+
+  var app = document.getElementById('app');
+  var list = document.getElementById('list');
+  var emptyMsg = document.getElementById('empty');
+  var targetEl = document.getElementById('target');
+  var targetUnit = document.getElementById('target-unit');
+  var factorEl = document.getElementById('factor');
+  var errorEl = document.getElementById('error');
+  var warnEl = document.getElementById('warning');
+  var goBtn = document.getElementById('go');
+  var hintEl = document.getElementById('hint');
+  var titleEl = document.getElementById('title');
+  var settingsEl = document.getElementById('settings');
+  var setCalc = document.getElementById('set-calc');
+  var setCheck = document.getElementById('set-check');
+  var setSystem = document.getElementById('set-system');
+  var setLight = document.getElementById('set-light');
+  var setDark = document.getElementById('set-dark');
+  var unitG = document.getElementById('unit-g');
+  var unitOz = document.getElementById('unit-oz');
+  var sTotal = document.getElementById('s-total');
+  var sDough = document.getElementById('s-dough');
+  var sFactor = document.getElementById('s-factor');
+  var sScoreItem = document.getElementById('s-score-item');
+  var sScore = document.getElementById('s-score');
+  var recipeEl = document.getElementById('recipe');
+  var exportOpen = document.getElementById('export-open');
+  var exportEl = document.getElementById('export');
+  var filenameEl = document.getElementById('filename');
+  var exportErr = document.getElementById('export-error');
+  var lastRun = null;
+
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  function isFlour(name) { return FLOURS.indexOf(name) !== -1; }
+  function num(v) { return v === '' || v === null || v === undefined ? NaN : Number(v); }
+  function unit() { return UNITS[state.unit] || UNITS.g; }
+  function roundTo(n, d) { var p = Math.pow(10, d); return Math.round(n * p) / p; }
+  function fmtPct(n) {
+    if (!isFinite(n)) return '–';
+    return roundTo(n, 1).toLocaleString(undefined, { maximumFractionDigits: 1 });
+  }
+  function fmtWt(n) {
+    if (!isFinite(n)) return '–';
+    var d = unit().decimals;
+    return roundTo(n, d).toLocaleString(undefined, { maximumFractionDigits: d });
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+  function load() {
+    try {
+      var s = localStorage.getItem(KEY);
+      if (!s) return null;
+      var o = JSON.parse(s);
+      if (!o || !Array.isArray(o.rows)) return null;
+      if (!o.modeChosen || (o.mode !== 'calc' && o.mode !== 'check')) o.mode = 'check';
+      if (!o.themeChosen || (o.theme !== 'light' && o.theme !== 'dark')) o.theme = 'system';
+      if (!UNITS[o.unit]) o.unit = 'g';
+      o.rows.forEach(function (r) {
+        if (FLOURS.indexOf(r.ing) === -1 && OTHERS.indexOf(r.ing) === -1) {
+          r.ing = /flour|semolina/i.test(r.ing) ? 'Other flour' : 'Misc';
+        }
+      });
+      return o;
+    } catch (e) { return null; }
+  }
+
+  /* ---------- rendering ---------- */
+
+  function buildSelect(row, i) {
+    var sel = document.createElement('select');
+    sel.id = 'ing-' + i;
+    sel.setAttribute('aria-label', 'Ingredient');
+    var g1 = document.createElement('optgroup'); g1.label = 'Flour (adds up to 100%)';
+    FLOURS.forEach(function (n) { var o = document.createElement('option'); o.value = n; o.textContent = n; g1.appendChild(o); });
+    var g2 = document.createElement('optgroup'); g2.label = 'Everything else (% of flour)';
+    OTHERS.forEach(function (n) { var o = document.createElement('option'); o.value = n; o.textContent = n; g2.appendChild(o); });
+    sel.appendChild(g1); sel.appendChild(g2);
+    sel.value = row.ing;
+    return sel;
+  }
+
+  function buildRow(row, i) {
+    var li = document.createElement('li');
+    li.className = 'row' + (isFlour(row.ing) ? ' is-flour' : '');
+
+    var sel = buildSelect(row, i);
+    sel.addEventListener('change', function () {
+      row.ing = sel.value;
+      li.classList.toggle('is-flour', isFlour(row.ing));
+      markCustom(); invalidate(); save();
+    });
+
+    var pct = document.createElement('input');
+    pct.type = 'number'; pct.id = 'pct-' + i;
+    pct.inputMode = 'decimal'; pct.min = '0'; pct.max = '300'; pct.step = '0.1';
+    pct.placeholder = '%'; pct.setAttribute('aria-label', 'Percent'); pct.enterKeyHint = 'next';
+    pct.value = row.pct === '' ? '' : row.pct;
+    pct.addEventListener('input', function () {
+      row.pct = pct.value === '' ? '' : Number(pct.value);
+      markCustom(); invalidate(); save();
+    });
+    pct.addEventListener('blur', function () {
+      if (pct.value === '') return;
+      var v = Math.min(300, Math.max(0, Number(pct.value)));
+      if (v !== Number(pct.value)) { pct.value = v; row.pct = v; invalidate(); save(); }
+    });
+
+    var wt;
+    if (state.mode === 'calc') {
+      wt = document.createElement('output');
+      wt.className = 'wt empty'; wt.id = 'wt-' + i; wt.textContent = '—';
+      wt.setAttribute('aria-label', 'Weight');
+    } else {
+      wt = document.createElement('input');
+      wt.type = 'number'; wt.id = 'ans-' + i;
+      wt.inputMode = 'decimal'; wt.min = '0'; wt.step = 'any';
+      wt.placeholder = unit().label; wt.setAttribute('aria-label', 'Your weight'); wt.enterKeyHint = 'next';
+      wt.value = row.ans === '' ? '' : row.ans;
+      wt.addEventListener('input', function () {
+        row.ans = wt.value === '' ? '' : Number(wt.value);
+        invalidate(); save();
+      });
+    }
+
+    var rm = document.createElement('button');
+    rm.type = 'button'; rm.className = 'remove'; rm.innerHTML = '&times;';
+    rm.setAttribute('aria-label', 'Remove ' + row.ing);
+    rm.addEventListener('click', function () {
+      state.rows.splice(i, 1);
+      markCustom(); renderRows(); invalidate(); save();
+    });
+
+    var note = document.createElement('div');
+    note.className = 'note'; note.id = 'note-' + i; note.hidden = true;
+
+    li.appendChild(sel); li.appendChild(pct); li.appendChild(wt); li.appendChild(rm); li.appendChild(note);
+    return li;
+  }
+
+  function renderRows() {
+    list.innerHTML = '';
+    state.rows.forEach(function (row, i) { list.appendChild(buildRow(row, i)); });
+    emptyMsg.hidden = state.rows.length > 0;
+    list.hidden = state.rows.length === 0;
+  }
+
+  function renderMode() {
+    var check = state.mode === 'check';
+    setCalc.setAttribute('aria-pressed', String(!check));
+    setCheck.setAttribute('aria-pressed', String(check));
+    goBtn.textContent = check ? 'Check my math' : 'Calculate';
+    sScoreItem.hidden = !check;
+    hintEl.textContent = check
+      ? 'Type the weight you worked out for each ingredient. Answers within ' + unit().tolText + ' count as correct.'
+      : 'Flour is 100%. Every other ingredient is a percentage of the flour.';
+  }
+
+  function renderUnit() {
+    var u = unit();
+    unitG.setAttribute('aria-pressed', String(state.unit === 'g'));
+    unitOz.setAttribute('aria-pressed', String(state.unit === 'oz'));
+    targetUnit.textContent = u.label;
+    targetEl.placeholder = state.unit === 'g' ? '1000' : '35';
+  }
+
+  /* The bottom line: running totals that update as the recipe is edited. */
+  function updateLine() {
+    var total = 0, any = false;
+    state.rows.forEach(function (r) { var p = num(r.pct); if (isFinite(p)) { total += p; any = true; } });
+    sTotal.textContent = any ? fmtPct(total) + '%' : '—';
+
+    var target = num(state.target);
+    var factor = state.factor === '' || state.factor === null || state.factor === undefined ? 1 : Number(state.factor);
+    if (target > 0 && factor > 0) {
+      sDough.textContent = fmtWt(target * factor) + ' ' + unit().label;
+    } else {
+      sDough.textContent = '—';
+    }
+    sFactor.textContent = factor > 0 ? '\u00d7' + roundTo(factor, 3).toLocaleString(undefined, { maximumFractionDigits: 3 }) : '—';
+  }
+
+  function invalidate() {
+    lastRun = null; exportOpen.hidden = true;
+    errorEl.hidden = true; warnEl.hidden = true;
+    sScore.textContent = '—'; sScore.className = 'v';
+    var rows = list.querySelectorAll('.row');
+    for (var i = 0; i < rows.length; i++) {
+      rows[i].classList.remove('is-ok', 'is-bad');
+      var w = rows[i].querySelector('output.wt');
+      if (w) { w.textContent = '—'; w.classList.add('empty'); }
+      var n = rows[i].querySelector('.note');
+      if (n) { n.hidden = true; n.textContent = ''; n.className = 'note'; }
+    }
+    updateLine();
+  }
+
+  function showError(text) { errorEl.textContent = text; errorEl.hidden = false; }
+  function showWarning(text) { warnEl.textContent = text; warnEl.hidden = false; }
+
+  /* ---------- the math ---------- */
+
+  function compute() {
+    var target = num(state.target);
+    var factor = state.factor === '' || state.factor === null || state.factor === undefined ? 1 : Number(state.factor);
+    if (!(target > 0)) return { error: 'Enter a target dough weight.', focus: targetEl };
+    if (!(factor > 0)) return { error: 'The conversion factor has to be greater than 0. Leave it blank for 1.', focus: factorEl };
+    if (state.rows.length === 0) return { error: 'Add at least one ingredient.' };
+    for (var i = 0; i < state.rows.length; i++) {
+      var p = num(state.rows[i].pct);
+      if (!isFinite(p) || p < 0) return { error: 'Every ingredient needs a percentage.', focus: document.getElementById('pct-' + i) };
+    }
+    var totalPct = 0, flourPct = 0, flourCount = 0;
+    state.rows.forEach(function (r) {
+      totalPct += Number(r.pct);
+      if (isFlour(r.ing)) { flourPct += Number(r.pct); flourCount++; }
+    });
+    if (!(totalPct > 0)) return { error: 'The percentages add up to 0, so there is nothing to weigh.' };
+
+    var scaled = target * factor;
+    var flourWt = scaled * 100 / totalPct;
+    var weights = state.rows.map(function (r) { return flourWt * Number(r.pct) / 100; });
+
+    var warning = null;
+    if (flourCount === 0) {
+      warning = 'There is no flour in this recipe. Weights are split by the total percentage instead.';
+    } else if (Math.abs(flourPct - 100) > 0.001) {
+      warning = 'Flour adds up to ' + fmtPct(flourPct) + '%. In baker’s math all the flours together should equal 100%.';
+    }
+    return { scaled: scaled, factor: factor, totalPct: totalPct, weights: weights, warning: warning };
+  }
+
+  function run() {
+    invalidate();
+    var r = compute();
+    if (r.error) {
+      showError(r.error);
+      if (r.focus) r.focus.focus();
+      return;
+    }
+    if (r.warning) showWarning(r.warning);
+    var u = unit();
+    lastRun = {
+      mode: state.mode, unit: u.label, target: num(state.target), factor: r.factor, scaled: r.scaled,
+      totalPct: r.totalPct, recipe: state.recipe || 'Custom recipe', correct: 0,
+      rows: state.rows.map(function (row, i) { return { ing: row.ing, pct: Number(row.pct), expected: r.weights[i], ans: num(row.ans), ok: null }; })
+    };
+    exportOpen.hidden = false;
+
+    if (state.mode === 'calc') {
+      r.weights.forEach(function (w, i) {
+        var out = document.getElementById('wt-' + i);
+        out.classList.remove('empty');
+        out.innerHTML = '';
+        out.appendChild(document.createTextNode(fmtWt(w)));
+        var s = document.createElement('small'); s.textContent = u.label; out.appendChild(s);
+      });
+      return;
+    }
+
+    var correct = 0, firstBad = null;
+    r.weights.forEach(function (expected, i) {
+      var row = list.children[i];
+      var note = document.getElementById('note-' + i);
+      var ans = num(state.rows[i].ans);
+      note.hidden = false;
+      if (!isFinite(ans)) {
+        lastRun.rows[i].ok = false;
+        row.classList.add('is-bad'); note.className = 'note bad';
+        note.textContent = '✗ No answer. Expected ' + fmtWt(expected) + ' ' + u.label + '.';
+        if (!firstBad) firstBad = document.getElementById('ans-' + i);
+        return;
+      }
+      var diff = ans - expected;
+      lastRun.rows[i].ok = Math.abs(diff) <= u.tolerance + 1e-9;
+      if (lastRun.rows[i].ok) {
+        correct++;
+        row.classList.add('is-ok'); note.className = 'note ok';
+        note.textContent = '✓ Correct (' + fmtWt(expected) + ' ' + u.label + ')';
+      } else {
+        row.classList.add('is-bad'); note.className = 'note bad';
+        note.textContent = '✗ Expected ' + fmtWt(expected) + ' ' + u.label + '. You wrote ' + fmtWt(ans) + ' ' + u.label + ', ' +
+          fmtWt(Math.abs(diff)) + ' ' + u.label + ' ' + (diff > 0 ? 'over' : 'under') + '.';
+        if (!firstBad) firstBad = document.getElementById('ans-' + i);
+      }
+    });
+    var total = r.weights.length;
+    lastRun.correct = correct;
+    sScore.textContent = correct + ' of ' + total;
+    sScore.className = 'v ' + (correct === total ? 'good' : 'bad');
+    if (firstBad) firstBad.focus();
+  }
+
+  /* ---------- recipe templates ---------- */
+
+  function buildRecipeSelect() {
+    var ph = document.createElement('option');
+    ph.value = ''; ph.textContent = 'Custom recipe';
+    recipeEl.appendChild(ph);
+    TEMPLATES.forEach(function (w) {
+      var g = document.createElement('optgroup'); g.label = w.week;
+      w.recipes.forEach(function (r) {
+        var o = document.createElement('option'); o.value = r.name; o.textContent = r.name; g.appendChild(o);
+      });
+      recipeEl.appendChild(g);
+    });
+    recipeEl.value = state.recipe || '';
+  }
+  function findTemplate(name) {
+    for (var i = 0; i < TEMPLATES.length; i++) {
+      for (var j = 0; j < TEMPLATES[i].recipes.length; j++) {
+        if (TEMPLATES[i].recipes[j].name === name) return TEMPLATES[i].recipes[j];
+      }
+    }
+    return null;
+  }
+  function markCustom() {
+    if (!state.recipe) return;
+    state.recipe = ''; recipeEl.value = '';
+  }
+  recipeEl.addEventListener('change', function () {
+    var t = findTemplate(recipeEl.value);
+    state.recipe = t ? t.name : '';
+    if (t) {
+      state.rows = t.rows.map(function (r) { return { ing: r[0], pct: r[1], ans: '' }; });
+      renderRows();
+    }
+    invalidate(); save();
+  });
+
+  /* ---------- units ---------- */
+
+  function setUnit(u) {
+    if (state.unit === u || !UNITS[u]) return;
+    var f = u === 'oz' ? OZ_PER_G : 1 / OZ_PER_G;
+    var d = UNITS[u].decimals;
+    state.unit = u;
+    var t = num(state.target);
+    if (isFinite(t)) state.target = roundTo(t * f, d);
+    state.rows.forEach(function (r) {
+      var a = num(r.ans);
+      if (isFinite(a)) r.ans = roundTo(a * f, d);
+    });
+    targetEl.value = state.target === '' ? '' : state.target;
+    renderUnit(); renderMode(); renderRows(); invalidate(); save();
+  }
+  unitG.addEventListener('click', function () { setUnit('g'); });
+  unitOz.addEventListener('click', function () { setUnit('oz'); });
+
+  /* ---------- wiring ---------- */
+
+  targetEl.value = state.target === '' || state.target === undefined ? '' : state.target;
+  factorEl.value = (state.factor === '' || state.factor === undefined || Number(state.factor) === 1) ? '' : state.factor;
+
+  targetEl.addEventListener('input', function () {
+    state.target = targetEl.value === '' ? '' : Number(targetEl.value);
+    invalidate(); save();
+  });
+  factorEl.addEventListener('input', function () {
+    state.factor = factorEl.value === '' ? '' : Number(factorEl.value);
+    invalidate(); save();
+  });
+
+  document.getElementById('add').addEventListener('click', function () {
+    var hasFlour = state.rows.some(function (r) { return isFlour(r.ing); });
+    state.rows.push({ ing: hasFlour ? 'Water' : 'Bread flour', pct: '', ans: '' });
+    markCustom(); renderRows(); invalidate(); save();
+    var p = document.getElementById('pct-' + (state.rows.length - 1));
+    if (p) p.focus();
+  });
+
+  document.getElementById('clear').addEventListener('click', function () {
+    state.rows = []; state.target = ''; state.factor = '';
+    targetEl.value = ''; factorEl.value = '';
+    markCustom();
+    renderRows(); invalidate(); save();
+    targetEl.focus();
+  });
+
+  function setMode(mode) {
+    state.modeChosen = true;
+    if (state.mode === mode) { save(); return; }
+    state.mode = mode;
+    renderMode(); renderRows(); invalidate(); save();
+  }
+  setCalc.addEventListener('click', function () { setMode('calc'); });
+  setCheck.addEventListener('click', function () { setMode('check'); });
+
+  /* ---------- export (xlsx / txt) ---------- */
+
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function stamp() {
+    var d = new Date();
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  }
+  function fileSafe(t) { return String(t).replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 40) || 'report'; }
+  function wtNum(n) { return roundTo(n, unit().decimals); }
+
+  function reportMeta() {
+    var r = lastRun;
+    return [
+      ['CUL-1151 Baker\u2019s Math', r.mode === 'check' ? 'Check my math' : 'Calculate'],
+      ['Date', stamp()],
+      ['Recipe', r.recipe],
+      ['Target dough weight', wtNum(r.target) + ' ' + r.unit],
+      ['Conversion factor', '\u00d7' + roundTo(r.factor, 3)],
+      ['Dough weight', wtNum(r.scaled) + ' ' + r.unit],
+      ['Total percentage', fmtPct(r.totalPct) + '%']
+    ];
+  }
+  function reportTable() {
+    var r = lastRun, check = r.mode === 'check';
+    var head = check ? ['Ingredient', '%', 'Your answer (' + r.unit + ')', 'Expected (' + r.unit + ')', 'Result']
+                     : ['Ingredient', '%', 'Weight (' + r.unit + ')'];
+    var body = r.rows.map(function (row) {
+      return check
+        ? [row.ing, row.pct, isFinite(row.ans) ? wtNum(row.ans) : '', wtNum(row.expected), row.ok ? 'Correct' : 'Incorrect']
+        : [row.ing, row.pct, wtNum(row.expected)];
+    });
+    var foot = check ? [['Score', r.correct + ' of ' + r.rows.length]] : [];
+    return { head: head, body: body, foot: foot };
+  }
+
+  function buildTxt() {
+    var meta = reportMeta(), t = reportTable();
+    var rows = [t.head].concat(t.body.map(function (b) { return b.map(String); }));
+    var widths = t.head.map(function (_, c) { return Math.max.apply(null, rows.map(function (r) { return r[c].length; })); });
+    function line(r) {
+      return r.map(function (cell, c) {
+        var numeric = c > 0 && c < r.length - (t.head.length === 5 ? 1 : 0);
+        var padN = widths[c] - cell.length, padS = new Array(padN + 1).join(' ');
+        return numeric ? padS + cell : cell + padS;
+      }).join('  ');
+    }
+    var out = meta.map(function (m) { return m[0] + ': ' + m[1]; });
+    out.push('');
+    out.push(line(t.head));
+    out.push(widths.map(function (w) { return new Array(w + 1).join('-'); }).join('  '));
+    rows.slice(1).forEach(function (r) { out.push(line(r)); });
+    t.foot.forEach(function (f) { out.push(''); out.push(f[0] + ': ' + f[1]); });
+    return out.join('\n') + '\n';
+  }
+
+  function loadSheetJS() {
+    if (window.XLSX) return Promise.resolve(window.XLSX);
+    return new Promise(function (resolve, reject) {
+      var sc = document.createElement('script');
+      sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.mini.min.js';
+      sc.onload = function () { window.XLSX ? resolve(window.XLSX) : reject(new Error('load')); };
+      sc.onerror = function () { reject(new Error('load')); };
+      document.head.appendChild(sc);
+    });
+  }
+  function buildXlsx(XLSX) {
+    var meta = reportMeta(), t = reportTable();
+    var aoa = meta.concat([[]], [t.head], t.body, t.foot.length ? [[]].concat(t.foot) : []);
+    var ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws['!cols'] = [{ wch: 22 }, { wch: 10 }, { wch: 18 }, { wch: 16 }, { wch: 10 }];
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, lastRun.mode === 'check' ? 'Check' : 'Recipe');
+    return XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+  }
+
+  function saveFile(filename, data) {
+    var useCap = window.claude && typeof window.claude.use === 'function';
+    if (useCap) {
+      return window.claude.use('downloads').then(function (dl) {
+        if (!dl) throw { code: 'unavailable' };
+        return dl.save({ filename: filename, data: data });
+      });
+    }
+    return new Promise(function (resolve, reject) {
+      try {
+        var blob = data instanceof Blob ? data : new Blob([data]);
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a'); a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+        resolve({ status: 'saved' });
+      } catch (e) { reject({ code: 'unavailable' }); }
+    });
+  }
+
+  function defaultFilename() {
+    var d = new Date();
+    return 'CUL1151_' + fileSafe(lastRun.recipe) + '_' + d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate());
+  }
+  function filename(ext) {
+    var base = filenameEl.value.trim().replace(/\.(xlsx|txt)$/i, '').replace(/[\\/:*?"<>|]+/g, '_');
+    return (base || defaultFilename()) + '.' + ext;
+  }
+  function showExportError(text) { exportErr.textContent = text; exportErr.hidden = false; }
+  function doExport(ext) {
+    exportErr.hidden = true;
+    if (!lastRun) { showExportError('Run the calculation first.'); return; }
+    var btns = exportEl.querySelectorAll('button'); for (var i = 0; i < btns.length; i++) btns[i].disabled = true;
+    var work = ext === 'xlsx' ? loadSheetJS().then(buildXlsx) : Promise.resolve(buildTxt());
+    work.then(function (data) { return saveFile(filename(ext), data); })
+      .then(function () { exportEl.hidden = true; })
+      .catch(function (err) {
+        var code = err && err.code;
+        if (code === 'declined') return;
+        if (err && err.message === 'load') showExportError('The spreadsheet library could not be loaded. Try the text table instead.');
+        else if (code === 'too_large') showExportError('The file is too large to save here.');
+        else showExportError('Saving is not available in this view. Try opening the page in a browser.');
+      })
+      .then(function () { for (var i = 0; i < btns.length; i++) btns[i].disabled = false; });
+  }
+  exportOpen.addEventListener('click', function () {
+    exportErr.hidden = true; exportEl.hidden = false;
+    filenameEl.value = defaultFilename();
+  });
+  document.getElementById('export-xlsx').addEventListener('click', function () { doExport('xlsx'); });
+  document.getElementById('export-txt').addEventListener('click', function () { doExport('txt'); });
+  document.getElementById('export-cancel').addEventListener('click', function () { exportEl.hidden = true; });
+  exportEl.addEventListener('click', function (e) { if (e.target === exportEl) exportEl.hidden = true; });
+  filenameEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); filenameEl.blur(); } });
+
+  /* ---------- theme + hidden settings (long-press the title) ---------- */
+
+  function renderTheme() {
+    if (state.theme === 'light' || state.theme === 'dark') {
+      document.documentElement.setAttribute('data-theme', state.theme);
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
+    setSystem.setAttribute('aria-pressed', String(state.theme !== 'light' && state.theme !== 'dark'));
+    setLight.setAttribute('aria-pressed', String(state.theme === 'light'));
+    setDark.setAttribute('aria-pressed', String(state.theme === 'dark'));
+  }
+  function setTheme(t) { state.theme = t; state.themeChosen = true; renderTheme(); save(); }
+  setSystem.addEventListener('click', function () { setTheme('system'); });
+  setLight.addEventListener('click', function () { setTheme('light'); });
+  setDark.addEventListener('click', function () { setTheme('dark'); });
+
+  var pressTimer = null;
+  function openSettings() { settingsEl.hidden = false; }
+  function closeSettings() { settingsEl.hidden = true; }
+  titleEl.addEventListener('pointerdown', function () {
+    clearTimeout(pressTimer);
+    pressTimer = setTimeout(openSettings, 600);
+  });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (ev) {
+    titleEl.addEventListener(ev, function () { clearTimeout(pressTimer); });
+  });
+  titleEl.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+  document.getElementById('settings-done').addEventListener('click', closeSettings);
+  settingsEl.addEventListener('click', function (e) { if (e.target === settingsEl) closeSettings(); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if (!settingsEl.hidden) closeSettings();
+    if (!exportEl.hidden) exportEl.hidden = true;
+  });
+
+  app.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    run();
+  });
+
+  renderTheme();
+  buildRecipeSelect();
+  renderUnit();
+  renderMode();
+  renderRows();
+  invalidate();
+})();
+</script>
